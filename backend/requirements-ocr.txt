@@ -1,0 +1,2 @@
+# Local CPU Chinese OCR; bundled models install inside the active Python environment.
+rapidocr_onnxruntime==1.4.4

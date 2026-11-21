@@ -1,0 +1,79 @@
+# Secrets
+.env
+.env.*
+!.env.example
+!.env.cloud.example
+!frontend/.env.example
+!backend/.env.example
+!backend/.env.cloud.example
+!backend/.env.mysql.example
+!backend/.env.ollama-qdrant.example
+!.env.docker.example
+
+# Local/customer data and generated deliverables
+data/
+data_backup*/
+backend/data_backup*/
+backend/.tmp-*/
+frontend/.tmp-*/
+backend/data_backup*/
+backend/data/
+backend/app/data/*
+!backend/app/data/smartart_template_manifest.json
+frontend/output/
+output/
+.tmp-*/
+.tmp-*
+.playwright-cli/
+.packaging/
+backend/server-*.log
+backend/server.*.log
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.uv-cache/
+
+# Node / Vite
+node_modules/
+dist/
+build/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Runtime data
+backend/data_verify/
+*.sqlite3
+*.sqlite
+*.db
+*.db-shm
+*.db-wal
+
+# Logs and temporary files
+*.log
+server-*.out.log
+server-*.err.log
+logs/
+tmp/
+temp/
+.cache/
+.DS_Store
+Thumbs.db
+
+# Local packaging output
+.packaging/
+*.zip

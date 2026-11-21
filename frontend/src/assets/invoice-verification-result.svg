@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="870" height="862" viewBox="0 0 870 862">
+  <defs>
+    <pattern id="watermark" width="260" height="150" patternUnits="userSpaceOnUse" patternTransform="rotate(-24)">
+      <text x="8" y="70" fill="#c9c9c9" opacity=".18" font-size="16" font-family="Arial,'Microsoft YaHei',sans-serif">国家税务总局</text>
+    </pattern>
+    <style>
+      .text { font-family: Arial, 'Microsoft YaHei', sans-serif; fill: #666; }
+      .small { font-size: 12px; }
+      .label { font-size: 12px; fill: #a86136; }
+      .value { font-size: 12px; fill: #5b5b5b; }
+      .line { stroke: #b86d3e; stroke-width: 1; }
+    </style>
+  </defs>
+  <rect width="870" height="862" fill="#fff"/>
+  <rect x="1" y="1" width="868" height="860" rx="4" fill="none" stroke="#969696"/>
+  <text x="18" y="28" class="text" font-size="13" font-weight="700" fill="#222">发票详情</text>
+  <text x="845" y="28" class="text" font-size="18" text-anchor="middle" fill="#777">×</text>
+  <line x1="0" y1="43" x2="870" y2="43" stroke="#e5e5e5"/>
+
+  <rect x="30" y="58" width="810" height="67" fill="#fff" stroke="#555"/>
+  <text x="45" y="96" class="text small">当日查验次数：第2次</text>
+  <text x="188" y="96" class="text small">查验时间：2026-09-30 08:02:50</text>
+  <rect x="725" y="77" width="84" height="30" rx="2" fill="#0066a9"/>
+  <text x="767" y="97" fill="#fff" text-anchor="middle" font-size="14" font-family="Arial,'Microsoft YaHei',sans-serif">打印</text>
+
+  <rect x="30" y="126" width="810" height="568" fill="url(#watermark)"/>
+  <path d="M31 126H839V694H31Z" fill="none" stroke="#b86d3e"/>
+  <g transform="translate(31 143)" fill="#111">
+    <rect width="14" height="14"/><rect x="4" y="4" width="6" height="6" fill="#fff"/>
+    <rect x="28" width="14" height="14"/><rect x="32" y="4" width="6" height="6" fill="#fff"/>
+    <rect y="28" width="14" height="14"/><rect x="4" y="32" width="6" height="6" fill="#fff"/>
+    <rect x="18" y="18" width="5" height="5"/><rect x="27" y="18" width="5" height="5"/><rect x="37" y="23" width="5" height="5"/>
+    <rect x="17" y="31" width="5" height="5"/><rect x="25" y="38" width="5" height="5"/><rect x="35" y="33" width="5" height="5"/>
+    <rect x="47" y="5" width="5" height="5"/><rect x="49" y="17" width="5" height="5"/><rect x="46" y="34" width="5" height="5"/>
+  </g>
+  <text x="311" y="177" fill="#b86d3e" font-size="24" font-weight="700" font-family="Arial,'Microsoft YaHei',sans-serif">电子发票（普通发票）</text>
+  <line x1="311" y1="191" x2="521" y2="191" stroke="#b86d3e" stroke-width="4"/>
+  <text x="654" y="157" class="label">发票号码：</text><text x="708" y="157" class="value">0000000000000000000</text>
+  <text x="654" y="181" class="label">开票日期：</text><text x="708" y="181" class="value">2024年01月01日</text>
+
+  <line x1="31" y1="220" x2="839" y2="220" class="line"/>
+  <line x1="31" y1="296" x2="839" y2="296" class="line"/>
+  <line x1="430" y1="220" x2="430" y2="296" class="line"/>
+  <text x="40" y="238" class="label">购买方信息</text>
+  <text x="67" y="263" class="label">名称：</text><text x="98" y="263" class="value">示例大学</text>
+  <text x="67" y="284" class="label">统一社会信用代码/纳税人识别号：</text><text x="284" y="284" class="value">91000000000000000X</text>
+  <text x="440" y="238" class="label">销售方信息</text>
+  <text x="467" y="263" class="label">名称：</text><text x="498" y="263" class="value">示例科技有限公司</text>
+  <text x="467" y="284" class="label">统一社会信用代码/纳税人识别号：</text><text x="684" y="284" class="value">91000000577331074F</text>
+
+  <line x1="31" y1="318" x2="839" y2="318" class="line"/>
+  <text x="102" y="313" class="label" text-anchor="middle">项目名称</text>
+  <text x="250" y="313" class="label" text-anchor="middle">规格型号</text>
+  <text x="347" y="313" class="label" text-anchor="middle">单位</text>
+  <text x="410" y="313" class="label" text-anchor="middle">数量</text>
+  <text x="489" y="313" class="label" text-anchor="middle">单价</text>
+  <text x="604" y="313" class="label" text-anchor="middle">金额</text>
+  <text x="715" y="313" class="label" text-anchor="middle">税率/征收率</text>
+  <text x="816" y="313" class="label" text-anchor="middle">税额</text>
+  <line x1="31" y1="328" x2="839" y2="328" class="line"/>
+  <text x="42" y="348" class="value">*计算机外部设备*（注：外部）AOC</text>
+  <text x="250" y="348" class="value" text-anchor="middle">27B31H</text><text x="347" y="348" class="value" text-anchor="middle">台</text>
+  <text x="410" y="348" class="value" text-anchor="middle">1</text><text x="497" y="348" class="value" text-anchor="middle">503.53982300885</text>
+  <text x="604" y="348" class="value" text-anchor="middle">503.54</text><text x="715" y="348" class="value" text-anchor="middle">13%</text><text x="816" y="348" class="value" text-anchor="middle">65.46</text>
+  <text x="42" y="374" class="value">24英寸AIPS办公显示器100Hz电子显示屏</text><text x="604" y="374" class="value" text-anchor="middle">-0.14</text><text x="715" y="374" class="value" text-anchor="middle">13%</text><text x="816" y="374" class="value" text-anchor="middle">-0.02</text>
+  <text x="100" y="492" class="label">合计</text><text x="604" y="492" class="value" text-anchor="middle">¥503.40</text><text x="816" y="492" class="value" text-anchor="middle">¥65.44</text>
+  <line x1="31" y1="523" x2="839" y2="523" class="line"/>
+  <text x="112" y="545" class="label" text-anchor="middle">价税合计（大写）</text><text x="226" y="545" class="value">ⓧ伍佰陆拾捌元捌角肆分</text><text x="738" y="545" class="label" text-anchor="middle">（小写）¥568.84</text>
+  <line x1="31" y1="559" x2="839" y2="559" class="line"/>
+  <text x="72" y="601" class="label" transform="rotate(90 72 601)">备注</text><text x="68" y="582" class="value">0000000000000000000</text>
+  <line x1="55" y1="559" x2="55" y2="694" class="line"/>
+  <text x="40" y="718" class="value">开票人：张三</text>
+  <text x="18" y="758" fill="#ed3b2f" font-size="12" font-family="Arial,'Microsoft YaHei',sans-serif" font-weight="700">特别提示：</text>
+  <text x="18" y="781" fill="#ed3b2f" font-size="11" font-family="Arial,'Microsoft YaHei',sans-serif">» 本平台仅提供简单发票票面信息的查验结果。</text>
+  <text x="18" y="801" fill="#ed3b2f" font-size="11" font-family="Arial,'Microsoft YaHei',sans-serif">» 若发现发票查验结果与实际发票不符，任何单位或个人有权通过当地税务机关举报。</text>
+  <rect x="413" y="826" width="47" height="25" rx="2" fill="#0066a9"/>
+  <text x="436" y="843" fill="#fff" text-anchor="middle" font-size="12" font-family="Arial,'Microsoft YaHei',sans-serif">关闭</text>
+</svg>

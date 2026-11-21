@@ -1,0 +1,17 @@
+[Unit]
+Description=New Biaoshuai Smart Bidding Backend
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/opt/new_biaoshuai/backend
+Environment="PATH=/opt/new_biaoshuai/backend/.venv/bin"
+ExecStart=/opt/new_biaoshuai/backend/.venv/bin/python -m uvicorn app.main:app --host 127.0.0.1 --port 3896
+Restart=always
+RestartSec=5
+TimeoutStopSec=30
+
+[Install]
+WantedBy=multi-user.target

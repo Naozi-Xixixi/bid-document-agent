@@ -1,0 +1,75 @@
+services:
+  qdrant:
+    image: qdrant/qdrant:v1.13.6
+    restart: unless-stopped
+    volumes:
+      - qdrant_data:/qdrant/storage
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    environment:
+      OLLAMA_HOST: 0.0.0.0:11434
+    volumes:
+      - ollama_data:/root/.ollama
+
+  ollama-models:
+    image: ollama/ollama:latest
+    depends_on:
+      - ollama
+    entrypoint: ["/bin/sh", "-c"]
+    command: "until ollama list >/dev/null 2>&1; do sleep 2; done; ollama pull bge-m3"
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: "no"
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - backend/.env
+    environment:
+      WORDAGENT_BRIDGE_HOST: 0.0.0.0
+      WORDAGENT_BRIDGE_PORT: 3896
+      WORDAGENT_BRIDGE_DATA_DIR: /app/data
+      WORDAGENT_BRIDGE_DATABASE_PATH: /app/data/wordagent.sqlite3
+      DB_BACKEND: sqlite
+      VECTOR_BACKEND: qdrant
+      VECTOR_EMBEDDING_PROVIDER: ollama
+      QDRANT_URL: http://qdrant:6333
+      QDRANT_PATH: ""
+      OLLAMA_BASE_URL: http://ollama:11434
+    volumes:
+      - app_data:/app/data
+    depends_on:
+      - qdrant
+      - ollama-models
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3896/api/health', timeout=5)"]
+      interval: 20s
+      timeout: 8s
+      retries: 5
+      start_period: 30s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+      args:
+        VITE_AMAP_JS_KEY: ${VITE_AMAP_JS_KEY:-}
+        VITE_AMAP_SECURITY_CODE: ${VITE_AMAP_SECURITY_CODE:-}
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  app_data:
+  qdrant_data:
+  ollama_data:

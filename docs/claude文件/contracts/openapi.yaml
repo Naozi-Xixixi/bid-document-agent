@@ -1,0 +1,184 @@
+openapi: 3.0.3
+info:
+  title: 食材配送 AI 投标系统 API
+  version: 0.1.0
+  description: >
+    单企业内网部署的投标系统后端契约（FastAPI）。所有接口需 JWT 鉴权（除 /auth/login），
+    敏感操作写审计日志。长任务返回 job_id，经 /jobs 轮询进度、支持暂停/续跑/单节重生成。
+servers:
+  - url: /api/v1
+security:
+  - bearerAuth: []
+
+tags:
+  - name: auth
+  - name: projects
+  - name: tender        # M1 解析
+  - name: outline       # M2 大纲
+  - name: knowledge     # M3 知识库
+  - name: proposal      # M4 渲染/导出
+  - name: review        # M5 审核/优化
+  - name: redaction     # M6 暗标
+  - name: quotation     # M7 报价分析
+  - name: presentation  # M8 PPT
+  - name: jobs          # 长任务编排
+
+paths:
+  /auth/login:
+    post:
+      tags: [auth]
+      security: []
+      summary: 登录获取 JWT
+      responses: { '200': { description: token } }
+
+  /projects:
+    get: { tags: [projects], summary: 项目列表, responses: { '200': { description: ok } } }
+    post: { tags: [projects], summary: 新建投标项目, responses: { '201': { description: created } } }
+  /projects/{projectId}:
+    get: { tags: [projects], summary: 项目详情(工作台聚合), parameters: [{$ref: '#/components/parameters/ProjectId'}], responses: { '200': { description: ok } } }
+  /projects/{projectId}/versions:
+    get: { tags: [projects], summary: 版本历史与回滚点(FR-037), parameters: [{$ref: '#/components/parameters/ProjectId'}], responses: { '200': { description: ok } } }
+
+  # ---------- M1 招标文件解析 ----------
+  /projects/{projectId}/tender-documents:
+    post:
+      tags: [tender]
+      summary: 上传招标文件(支持 pdf/docx/doc/image/zip)并触发解读, 异步返回 job_id (FR-001~005)
+      parameters: [{$ref: '#/components/parameters/ProjectId'}]
+      responses: { '202': { $ref: '#/components/responses/JobAccepted' } }
+  /tender-documents/{docId}/parse-result:
+    get:
+      tags: [tender]
+      summary: 解读结果(资格要求/评分表/废标清单/政策提示, 均带 page_anchor 可跳转)
+      parameters: [{$ref: '#/components/parameters/DocId'}]
+      responses: { '200': { description: ok } }
+  /tender-documents/{docId}/qualification-match:
+    post:
+      tags: [tender]
+      summary: 与知识库资质比对, 输出 满足/不满足/需补充 (FR-006)
+      parameters: [{$ref: '#/components/parameters/DocId'}]
+      responses: { '200': { description: ok } }
+
+  # ---------- M2 大纲 ----------
+  /projects/{projectId}/outline:
+    post: { tags: [outline], summary: 生成多级大纲(末级关联评分项, 未覆盖项显式列出 FR-007), parameters: [{$ref: '#/components/parameters/ProjectId'}], responses: { '200': { description: ok } } }
+    put: { tags: [outline], summary: 增删/重命名/拖动排序保存(FR-008), parameters: [{$ref: '#/components/parameters/ProjectId'}], responses: { '200': { description: ok } } }
+  /outline-templates:
+    get: { tags: [outline], summary: 大纲模板列表, responses: { '200': { description: ok } } }
+    post: { tags: [outline], summary: 大纲另存为模板, responses: { '201': { description: created } } }
+
+  # ---------- M3 知识库 ----------
+  /knowledge-items:
+    get:
+      tags: [knowledge]
+      summary: 检索(业态/关键词/项目类型/年份 + 全文/语义, 默认仅 active) (FR-011)
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: industry, in: query, schema: { type: string } }
+        - { name: year, in: query, schema: { type: integer } }
+        - { name: type, in: query, schema: { type: string } }
+      responses: { '200': { description: 3s 内按相关度返回 } }
+    post: { tags: [knowledge], summary: 批量录入(≥30, 部分失败不影响其余 FR-009), responses: { '207': { description: multi-status } } }
+  /knowledge-items/{itemId}:
+    put: { tags: [knowledge], summary: 编辑元数据(证书类缺 valid_until 提示 FR-010), parameters: [{$ref: '#/components/parameters/ItemId'}], responses: { '200': { description: ok } } }
+    delete: { tags: [knowledge], summary: 删除(按角色鉴权, 记审计 FR-013), parameters: [{$ref: '#/components/parameters/ItemId'}], responses: { '204': { description: no content } } }
+  /knowledge-items/{itemId}/supersede:
+    post: { tags: [knowledge], summary: 上传新版并指定替代旧版, 旧版置 expired (FR-014/US10), parameters: [{$ref: '#/components/parameters/ItemId'}], responses: { '200': { description: ok } } }
+  /knowledge-items/expiring:
+    get: { tags: [knowledge], summary: 到期提醒列表(T-30 天内 + 已过期 FR-015), responses: { '200': { description: ok } } }
+  /knowledge-items/{itemId}/reuse:
+    post: { tags: [knowledge], summary: 一键复用到指定大纲节点(文字+图片+来源标注 FR-012), parameters: [{$ref: '#/components/parameters/ItemId'}], responses: { '200': { description: ok } } }
+
+  # ---------- M4 标书渲染/导出 ----------
+  /projects/{projectId}/proposal/generate:
+    post: { tags: [proposal], summary: 逐节生成标书(智能插图/标注/表格/图示), 异步 job_id (FR-017~023), parameters: [{$ref: '#/components/parameters/ProjectId'}], responses: { '202': { $ref: '#/components/responses/JobAccepted' } } }
+  /sections/{sectionId}:
+    get: { tags: [proposal], summary: 章节正文(含标注/表格/图示/溯源), parameters: [{$ref: '#/components/parameters/SectionId'}], responses: { '200': { description: ok } } }
+    put: { tags: [proposal], summary: 编辑章节(乐观锁+章节级锁, 多人并发 FR-038), parameters: [{$ref: '#/components/parameters/SectionId'}], responses: { '200': { description: ok } } }
+  /sections/{sectionId}/regenerate:
+    post: { tags: [proposal], summary: 重生成单节(可暂停/续跑), parameters: [{$ref: '#/components/parameters/SectionId'}], responses: { '202': { $ref: '#/components/responses/JobAccepted' } } }
+  /sections/{sectionId}/annotations:
+    put: { tags: [proposal], summary: 编辑图片标注(红框坐标/说明框/题注/证书表格列数 FR-019/020), parameters: [{$ref: '#/components/parameters/SectionId'}], responses: { '200': { description: ok } } }
+  /projects/{projectId}/proposal/export:
+    post:
+      tags: [proposal]
+      summary: 导出 Word/PDF(保留目录/页眉页脚/编号, 图片 DPI≥150 FR-024)
+      parameters:
+        - {$ref: '#/components/parameters/ProjectId'}
+        - { name: format, in: query, schema: { type: string, enum: [docx, pdf] } }
+      responses: { '202': { $ref: '#/components/responses/JobAccepted' } }
+
+  # ---------- M5 审核/优化 ----------
+  /projects/{projectId}/review:
+    post: { tags: [review], summary: 智能审核(资质/废标/评分覆盖/格式, 项目级配置 FR-025), parameters: [{$ref: '#/components/parameters/ProjectId'}], responses: { '200': { description: 审核报告(级别+定位+依据+建议) } } }
+  /audit-findings/{findingId}:
+    patch: { tags: [review], summary: 更新问题状态(fixed/ignored)并支持跳转定位, parameters: [{ name: findingId, in: path, required: true, schema: { type: string }}], responses: { '200': { description: ok } } }
+  /proposals/enhance:
+    post: { tags: [review], summary: 无损内容提升(冻结样式/标题层级, 输出修订对照 FR-027), responses: { '202': { $ref: '#/components/responses/JobAccepted' } } }
+  /proposals/key-info:
+    post: { tags: [review], summary: 合同/发票关键信息识别标注(金额/期限/主体/发票号 FR-028), responses: { '200': { description: ok } } }
+  /projects/{projectId}/evidence-shots:
+    post: { tags: [review], summary: 上传佐证截图并匹配到资质/发票条目(用户查询后上传 FR-029), parameters: [{$ref: '#/components/parameters/ProjectId'}], responses: { '201': { description: created } } }
+
+  # ---------- M6 暗标 ----------
+  /redaction-rules:
+    get: { tags: [redaction], summary: 脱敏词典, responses: { '200': { description: ok } } }
+    put: { tags: [redaction], summary: 维护脱敏词/正则/关联词/适用范围 (FR-030), responses: { '200': { description: ok } } }
+  /projects/{projectId}/redaction/generate:
+    post: { tags: [redaction], summary: 生成暗标(文本脱敏+图片OCR脱敏+逐张报告), 异步 job_id, parameters: [{$ref: '#/components/parameters/ProjectId'}], responses: { '202': { $ref: '#/components/responses/JobAccepted' } } }
+  /projects/{projectId}/redaction/residual-scan:
+    get: { tags: [redaction], summary: 残留扫描报告(含图片内文字); 未确认残留将阻断导出 (FR-031/SC-005), parameters: [{$ref: '#/components/parameters/ProjectId'}], responses: { '200': { description: ok } } }
+  /projects/{projectId}/redaction/confirm:
+    post: { tags: [redaction], summary: 人工确认残留处理, 解除导出阻断, parameters: [{$ref: '#/components/parameters/ProjectId'}], responses: { '200': { description: ok } } }
+
+  # ---------- M7 报价分析 ----------
+  /quotations/import:
+    post: { tags: [quotation], summary: 导入 Excel/CSV(字段映射+校验报告 FR-032), responses: { '200': { description: 成功/失败条数与原因 } } }
+  /quotations/analyze:
+    get:
+      tags: [quotation]
+      summary: 多维筛选统计(均价/极值/中标区间/样本数; <5 标注样本不足 FR-033)
+      parameters:
+        - { name: time, in: query, schema: { type: string } }
+        - { name: region, in: query, schema: { type: string } }
+        - { name: platform, in: query, schema: { type: string } }
+        - { name: industry, in: query, schema: { type: string } }
+      responses: { '200': { description: ok } }
+  /projects/{projectId}/quotations/reference-range:
+    get: { tags: [quotation], summary: 参考报价区间+依据项目清单+免责声明(FR-034), parameters: [{$ref: '#/components/parameters/ProjectId'}], responses: { '200': { description: ok } } }
+
+  # ---------- M8 PPT ----------
+  /projects/{projectId}/presentation/generate:
+    post: { tags: [presentation], summary: 生成答辩 PPT(15–25 页, 模板可选), 异步 job_id (FR-035), parameters: [{$ref: '#/components/parameters/ProjectId'}], responses: { '202': { $ref: '#/components/responses/JobAccepted' } } }
+  /presentations/{presId}/sync:
+    post: { tags: [presentation], summary: 与标书同步刷新(未改页刷新/user_edited 页冲突提示 FR-036), parameters: [{ name: presId, in: path, required: true, schema: { type: string }}], responses: { '200': { description: ok } } }
+  /presentations/{presId}/export:
+    post: { tags: [presentation], summary: 导出 .pptx, parameters: [{ name: presId, in: path, required: true, schema: { type: string }}], responses: { '202': { $ref: '#/components/responses/JobAccepted' } } }
+
+  # ---------- 长任务编排 ----------
+  /jobs/{jobId}:
+    get: { tags: [jobs], summary: 进度查询(实时可见), parameters: [{$ref: '#/components/parameters/JobId'}], responses: { '200': { description: 含 progress/status/checkpoint } } }
+  /jobs/{jobId}/pause:
+    post: { tags: [jobs], summary: 暂停(FR-038), parameters: [{$ref: '#/components/parameters/JobId'}], responses: { '200': { description: ok } } }
+  /jobs/{jobId}/resume:
+    post: { tags: [jobs], summary: 从断点续跑(已生成章节不丢), parameters: [{$ref: '#/components/parameters/JobId'}], responses: { '200': { description: ok } } }
+
+components:
+  securitySchemes:
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    ProjectId: { name: projectId, in: path, required: true, schema: { type: string } }
+    DocId: { name: docId, in: path, required: true, schema: { type: string } }
+    ItemId: { name: itemId, in: path, required: true, schema: { type: string } }
+    SectionId: { name: sectionId, in: path, required: true, schema: { type: string } }
+    JobId: { name: jobId, in: path, required: true, schema: { type: string } }
+  responses:
+    JobAccepted:
+      description: 长任务已受理, 轮询 /jobs/{jobId}
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              job_id: { type: string }
+              status: { type: string, enum: [queued, running] }
